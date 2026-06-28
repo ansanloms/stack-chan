@@ -126,6 +126,17 @@ mcconfig -d -m -p sim/m5stack -o build
 
 - ターゲットは `$MODDABLE/build/simulators/` にある skin から選ぶ (`m5stack` / `m5stickc` / `moddable_two` 等)。CoreS3 専用 skin は無いが、CoreS3 も classic M5Stack も画面は 320x240 なので `sim/m5stack` で代用する。skin は枠の見た目と画面領域を定義するだけで、CPU や周辺機器はエミュレートしない。
 - `-d` (debug) でビルドすると `xsbug` が自動起動して接続する。`trace()` 出力やブレークがここに出る。
+- ビルド済みアプリは `mcsim <出力先>/bin/lin/<target>/release/<app>/mc.so` で直接起動もできる (mcconfig を介さず GUI だけ立ち上げる場合)。
+
+### WSL (WSLg) で起動する場合
+
+WSLg 上では GTK の Wayland バックエンドだとウィンドウが画面に出ないことがある (ソケット接続は成功するが浮上しない)。X11 (Xwayland) バックエンドに固定すると確実に表示される。
+
+```sh
+GDK_BACKEND=x11 mcsim .../release/<app>/mc.so
+```
+
+`mcconfig` 経由で起動する場合も同じ環境変数を渡せばよい。
 
 ### camera-view はシミュレータでは動かない
 
