@@ -1,0 +1,29 @@
+{
+	"include": [
+		"$(MODDABLE)/examples/manifest_base.json",
+		"$(MODDABLE)/modules/io/manifest.json",
+		"$(MODDABLE)/examples/manifest_commodetto.json",
+		"$(MODDABLE)/modules/io/imagein/camera/manifest.json"
+	],
+	"config": {
+		"rotation": 0
+	},
+	"creation": {
+		"static": 0,
+		"chunk": {
+			"initial": 1048576,
+			"incremental": 0
+		},
+		"heap": {
+			"initial": 8192,
+			"incremental": 0
+		},
+		"stack": 512
+	},
+	"modules": {
+		"*": [
+			"./main",
+			"./frame"
+		]
+	}
+}

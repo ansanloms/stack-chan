@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json",
+  // Type-check config for this Moddable / XS app under `deno check`.
+  //
+  // The Moddable SDK virtual modules ("commodetto/*", "piu/*", "embedded:io/*")
+  // ship as type-only .d.ts in @moddable/typings, which the package expects to be
+  // consumed via tsconfig `paths` wildcards. Deno has no `paths`, but with
+  // sloppy-imports a trailing-slash prefix map resolves the bare specifiers to
+  // their .d.ts (and their transitive .d.ts deps) without listing each one.
+  // Add one prefix line per SDK namespace as you start importing from it.
+  //
+  // compilerOptions is scoped to this file so the XS globals/lib do not leak
+  // into the Deno host code at the repo root.
+  "unstable": ["sloppy-imports"],
+  "compilerOptions": {
+    "lib": ["es2024"],
+    // Global ambient XS declarations (trace, ByteBuffer, ...). `screen` comes
+    // from the global {} block in commodetto/Poco.d.ts, pulled in via the map.
+    "types": ["../../node_modules/@moddable/typings/xs.d.ts"]
+  },
+  "imports": {
+    "commodetto/": "../../node_modules/@moddable/typings/commodetto/",
+    // camera has no type in @moddable/typings; use the local shim (exact match
+    // wins over any namespace prefix).
+    "embedded:io/image/in/camera": "./types/embedded-io-image-in-camera.d.ts"
+  }
+}

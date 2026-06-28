@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json",
+  "exclude": ["firmware"],
+  "fmt": {
+    "proseWrap": "preserve"
+  },
+  "lint": {
+    "rules": { "tags": ["recommended"] },
+    "plugins": ["jsr:@aireone/deno-lint-curly"]
+  },
+  "nodeModulesDir": "auto",
+  "imports": {
+    "@moddable/typings": "npm:@moddable/typings@^8.2.3"
+  },
+  "tasks": {
+    "test": "deno test -A --parallel --coverage",
+    "check": "deno task check:*",
+    "check:camera-view": "deno check --config firmware/camera-view/deno.json firmware/camera-view/main.ts",
+    "lint": "deno lint && deno fmt --check",
+    "fix": "deno lint --fix && deno fmt",
+    "build": "deno task build:*",
+    "build:camera-view": "cd firmware/camera-view && mcconfig -d -m -p esp32/m5stack_cores3"
+  }
+}
