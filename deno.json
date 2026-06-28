@@ -19,9 +19,11 @@
     "test": "deno test -A --parallel --coverage",
     "check": "deno task check:*",
     "check:camera-view": "deno check --config firmware/camera-view/deno.json firmware/camera-view/main.ts",
+    "check:face": "deno check --config firmware/face/deno.json firmware/face/main.ts",
     "lint": "deno lint && deno fmt --check",
     "fix": "deno lint --fix && deno fmt",
     "build": "deno task build:*",
-    "build:camera-view": "cd firmware/camera-view && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build"
+    "build:camera-view": "cd firmware/camera-view && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build",
+    "build:face": "cd firmware/face && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build"
   }
 }

@@ -30,6 +30,9 @@ deno.json         ルート。host 環境の設定 + タスク (firmware は exc
 
 - `firmware/camera-view/` — カメラ映像を画面表示する最小アプリ。詳細は
   [firmware/camera-view/README.md](firmware/camera-view/README.md)。
+- `firmware/face/` — スタックチャンの顔 (黒背景に白い目と口) を表示するアプリ。
+  まばたき・口の開閉・呼吸のアニメーション付き。カメラに依存しないので実機だけでなく
+  シミュレータ (`mcconfig -p sim/m5stack`) でもそのまま動く。
 
 ## 前提
 
@@ -140,7 +143,7 @@ GDK_BACKEND=x11 mcsim .../release/<app>/mc.so
 
 ### camera-view はシミュレータでは動かない
 
-シミュレータは XS エンジンと Piu / Commodetto の描画を PC 上で再現するが、ハードウェア固有ドライバは持たない。camera-view が使う `embedded:io/image/in/camera` (GC0308) は esp32 専用実装で、シミュレータには無い。そのため camera-view の検証は実機で行う必要がある。シミュレータと xsbug は、カメラに依存しない描画 / UI / ロジックのアプリや、将来の app を実機なしで試すために用意してある。
+シミュレータは XS エンジンと Piu / Commodetto の描画を PC 上で再現するが、ハードウェア固有ドライバは持たない。camera-view が使う `embedded:io/image/in/camera` (GC0308) は esp32 専用実装で、シミュレータには無い。そのため camera-view の検証は実機で行う必要がある。シミュレータと xsbug は、カメラに依存しない描画 / UI / ロジックのアプリ (例: `firmware/face`) や、将来の app を実機なしで試すために用意してある。
 
 ## TypeScript / 型
 
