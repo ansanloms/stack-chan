@@ -34,7 +34,9 @@ deno.json         ルート。host 環境の設定 + タスク (firmware は exc
 ## 前提
 
 - [Deno](https://deno.com/)。
-- device をビルドするなら [Moddable SDK](https://www.moddable.com/) (環境変数 `MODDABLE` 設定済み) と ESP32-S3 向け ESP-IDF ツールチェーン。Moddable の ESP32 ビルドは内部で ESP-IDF を使う。
+- device をビルドするなら以下も必要。
+  - [Moddable SDK](https://www.moddable.com/) のコマンドラインツール (`mcconfig` 等) が PATH にあること。`.ts` を含むアプリは `mcconfig` が `tsc` を呼ぶため TypeScript も要る。
+  - **ESP-IDF v6.0** (Moddable SDK 8.2.3 が要求するバージョン)。Espressif 公式手順で導入する (下記「ESP-IDF v6.0 のセットアップ」)。
 
 ## タスク
 
@@ -51,7 +53,24 @@ deno task lint                # deno lint + fmt --check
 deno task fix                 # deno lint --fix + fmt
 ```
 
-## WSL での実機ビルド・書き込み
+## ESP-IDF v6.0 のセットアップ
+
+Moddable SDK 8.2.3 は ESP-IDF v6.0 を要求する。Espressif の公式手順で導入する (nix の `nixpkgs-esp-dev` は既定が v5.5.2 で、v6.0 へ上げると esptool/kconfiglib のバージョン不整合でイメージ生成に失敗するため、公式インストールを使う)。
+
+```sh
+mkdir -p ~/esp32 && cd ~/esp32
+git clone -b v6.0 --recursive https://github.com/espressif/esp-idf.git esp-idf-v6.0
+cd esp-idf-v6.0 && ./install.sh esp32s3
+```
+
+ビルドするシェルで毎回、環境を読み込む。
+
+```sh
+export IDF_PATH=~/esp32/esp-idf-v6.0
+. $IDF_PATH/export.sh
+```
+
+## WSL での USB シリアル接続と書き込み
 
 開発環境が Windows + WSL2 の場合、CoreS3 の USB シリアルは既定では WSL から見えない。
 
@@ -85,11 +104,14 @@ UPLOAD_PORT=/dev/ttyACM0 deno task build:camera-view
 - `mcconfig` は既定でビルド成果物を `$MODDABLE/build` 配下へ書く。SDK が読み取り専用
   (nix store 等) だと `### Error: Permission denied` になるため、`build:camera-view`
   タスクは `-o build` で書き込み可能な出力先を明示している。
-- esp32 / esp32-s3 ビルドには ESP-IDF と Xtensa ツールチェーンのセットアップ
-  (`IDF_PATH` 設定 + `. $IDF_PATH/export.sh`) が必要。未設定だと
-  `### Error: $IDF_PATH not set` になる。
-- ビルド・書き込みは WSL のログインシェルで行う (`MODDABLE` / ESP-IDF の環境変数が読み込まれた
-  状態であること)。
+- esp32-s3 ビルドには ESP-IDF v6.0 が必要 (上記セットアップ)。`IDF_PATH` 設定 +
+  `. $IDF_PATH/export.sh` を済ませること。未設定だと `### Error: $IDF_PATH not set`、
+  バージョン不一致だと `Expected ESP IDF v6.0, found ...` になる。
+- `.ts` のコンパイルは `mcconfig` が `tsc` を呼ぶ。tsc が PATH に必要。Moddable は
+  TypeScript の target/lib に es2025 を指定するが、安定版 tsc (5.9) は es2024 までの
+  対応なので、ビルド環境側で es2024 へ寄せる必要がある (この環境では nix の
+  `moddable-sdk` パッケージが tsc 同梱と es2024 化を行っている)。
+- ビルド・書き込みは ESP-IDF 環境を読み込んだシェルで行う (`. export.sh` 済み)。
 
 ## TypeScript / 型
 
