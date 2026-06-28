@@ -113,6 +113,24 @@ UPLOAD_PORT=/dev/ttyACM0 deno task build:camera-view
   `moddable-sdk` パッケージが tsc 同梱と es2024 化を行っている)。
 - ビルド・書き込みは ESP-IDF 環境を読み込んだシェルで行う (`. export.sh` 済み)。
 
+## シミュレータ (mcsim) / デバッガ (xsbug)
+
+実機に焼かずに PC 上で動かす GUI シミュレータ `mcsim` と、GUI デバッガ `xsbug` が使える。両者は GTK ベースのアプリで、この環境では nix の `moddable-sdk` パッケージがまとめてビルド・PATH 提供する (`mcsim` / `xsbug` コマンド)。実行には X / Wayland の表示環境が要る (WSL2 なら WSLg)。
+
+アプリをシミュレータでビルド・起動する。`-p` にシミュレータターゲットを渡す。
+
+```sh
+cd firmware/<app>
+mcconfig -d -m -p sim/m5stack -o build
+```
+
+- ターゲットは `$MODDABLE/build/simulators/` にある skin から選ぶ (`m5stack` / `m5stickc` / `moddable_two` 等)。CoreS3 専用 skin は無いが、CoreS3 も classic M5Stack も画面は 320x240 なので `sim/m5stack` で代用する。skin は枠の見た目と画面領域を定義するだけで、CPU や周辺機器はエミュレートしない。
+- `-d` (debug) でビルドすると `xsbug` が自動起動して接続する。`trace()` 出力やブレークがここに出る。
+
+### camera-view はシミュレータでは動かない
+
+シミュレータは XS エンジンと Piu / Commodetto の描画を PC 上で再現するが、ハードウェア固有ドライバは持たない。camera-view が使う `embedded:io/image/in/camera` (GC0308) は esp32 専用実装で、シミュレータには無い。そのため camera-view の検証は実機で行う必要がある。シミュレータと xsbug は、カメラに依存しない描画 / UI / ロジックのアプリや、将来の app を実機なしで試すために用意してある。
+
 ## TypeScript / 型
 
 device コードも TypeScript で書く。`mcconfig` は SDK 同梱の typings で .ts を直接ビルドするので、ビルドに追加セットアップは不要。

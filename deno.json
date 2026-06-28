@@ -5,7 +5,10 @@
     "proseWrap": "preserve"
   },
   "lint": {
-    "rules": { "tags": ["recommended"] },
+    "rules": {
+      "tags": ["recommended"],
+      "include": ["no-sloppy-imports"]
+    },
     "plugins": ["jsr:@aireone/deno-lint-curly"]
   },
   "nodeModulesDir": "auto",

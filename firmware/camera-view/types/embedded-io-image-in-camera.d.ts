@@ -1,45 +1,61 @@
 /*
- * Local type declaration for Moddable's camera driver.
+ * カメラドライバ "embedded:io/image/in/camera" の型定義 (自前)。
  *
- * The module "embedded:io/image/in/camera" exists in the Moddable SDK
- * (modules/io/imagein/camera) but, unlike most embedded:io modules, it ships no
- * .d.ts under @moddable/typings. This shim covers the surface used by this app.
- * Reference: modules/io/imagein/camera/esp32/camera.c
+ * このモジュールは Moddable SDK 本体に実装がある (modules/io/imagein/camera) が、
+ * 他の embedded:io モジュールと違い @moddable/typings に型 (.d.ts) が付属しない。
+ * そのため型検査が通るよう、このアプリで使う範囲だけをここで宣言している。
+ * 参照実装: modules/io/imagein/camera/esp32/camera.c
+ *
+ * このファイルは firmware/camera-view/deno.json の imports で
+ *   "embedded:io/image/in/camera" -> このファイル
+ * に明示マップしている (型のみの shim なので実行時の実体は SDK 側)。
  */
 declare module "embedded:io/image/in/camera" {
 	/**
-	 * A captured frame. It is a byte buffer (usable as the Bitmap backing store)
-	 * that, in "buffer/disposable" mode, must be closed after use.
+	 * 取得した 1 フレーム。中身は描画に使えるバイトバッファ (ByteBuffer) で、
+	 * かつ close() を持つ。"buffer/disposable" モードでは使用後に close() で解放する。
 	 */
 	export type CameraFrame = ByteBuffer & { close(): void };
 
+	/** Camera コンストラクタに渡す設定。 */
 	export interface CameraOptions {
-		/** Requested frame width. The driver may grant a different size (see Camera.width). */
+		/** 取得したいフレーム幅。ドライバが別値しか許さない場合は Camera.width が実値。 */
 		width: number;
-		/** Requested frame height. The driver may grant a different size (see Camera.height). */
+		/** 取得したいフレーム高さ。同上 (Camera.height が実値)。 */
 		height: number;
 		/**
-		 * Commodetto pixel format constant (e.g. screen.pixelFormat), or "jpeg" to
-		 * request hardware JPEG output (not supported by all sensors, e.g. GC0308).
+		 * ピクセル形式。Commodetto の形式定数 (例: screen.pixelFormat)、または
+		 * "jpeg" でハードウェア JPEG を要求する (GC0308 等は非対応)。
 		 */
 		imageType: number | "jpeg";
-		/** "buffer": reuse a caller-owned buffer. "buffer/disposable": driver owns the frame. */
+		/**
+		 * フレームの受け渡し方式。
+		 * - "buffer": 呼び出し側のバッファを再利用する。
+		 * - "buffer/disposable": ドライバ内部のバッファを返す (コピー回避。要 close())。
+		 */
 		format: "buffer" | "buffer/disposable";
-		/** Called when a new frame is available to read. */
+		/** 新しいフレームが読めるようになったら呼ばれる。 */
 		onReadable?: () => void;
 	}
 
+	/** カメラドライバ本体。 */
 	export default class Camera {
 		constructor(options: CameraOptions);
-		/** Read the next frame. In "buffer/disposable" mode returns a frame (or undefined). */
+		/** 次のフレームを読む。"buffer/disposable" では取得した CameraFrame を返す (無ければ undefined)。 */
 		read(buffer?: ByteBuffer): CameraFrame | undefined;
+		/** キャプチャを開始する。 */
 		start(): void;
+		/** キャプチャを停止する。 */
 		stop(): void;
+		/** ドライバを閉じる。 */
 		close(): void;
+		/** 実際に確保されたフレーム幅 (px)。 */
 		readonly width: number;
+		/** 実際に確保されたフレーム高さ (px)。 */
 		readonly height: number;
-		/** The pixel format of captured frames (Commodetto format constant). */
+		/** フレームのピクセル形式 (Commodetto の形式定数)。 */
 		readonly imageType: number;
+		/** 現在の受け渡し方式 ("buffer" / "buffer/disposable")。 */
 		readonly format: string;
 	}
 }
