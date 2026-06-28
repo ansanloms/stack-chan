@@ -54,9 +54,8 @@ deno task fix                 # deno lint --fix + fmt
 ## WSL での実機ビルド・書き込み
 
 開発環境が Windows + WSL2 の場合、CoreS3 の USB シリアルは既定では WSL から見えない。
-[usbipd-win](https://github.com/dorssel/usbipd-win) で WSL2 にアタッチする (手順は
-[ビルドログ](https://ansanloms.github.io/blog/articles/20260525-stack-chan-build-log/index.html)
-に準拠)。
+
+[usbipd-win](https://github.com/dorssel/usbipd-win) で WSL2 にアタッチする (手順は[ビルドログ](https://ansanloms.github.io/blog/articles/20260525-stack-chan-build-log/index.html)に準拠)。
 
 Windows に usbipd を入れる (初回のみ)。
 
@@ -83,10 +82,12 @@ UPLOAD_PORT=/dev/ttyACM0 deno task build:camera-view
 
 ### 環境メモ
 
-- `mcconfig` はビルド成果物を `$MODDABLE/build` 配下に書く。`MODDABLE` は **書き込み可能な**
-  SDK ディレクトリへ向けること。読み取り専用の場所 (nix store 等) を指すと
-  `### Error: Permission denied` で失敗する。
-- esp32 / esp32-s3 ビルドには ESP-IDF と Xtensa ツールチェーンのセットアップが必要。
+- `mcconfig` は既定でビルド成果物を `$MODDABLE/build` 配下へ書く。SDK が読み取り専用
+  (nix store 等) だと `### Error: Permission denied` になるため、`build:camera-view`
+  タスクは `-o build` で書き込み可能な出力先を明示している。
+- esp32 / esp32-s3 ビルドには ESP-IDF と Xtensa ツールチェーンのセットアップ
+  (`IDF_PATH` 設定 + `. $IDF_PATH/export.sh`) が必要。未設定だと
+  `### Error: $IDF_PATH not set` になる。
 - ビルド・書き込みは WSL のログインシェルで行う (`MODDABLE` / ESP-IDF の環境変数が読み込まれた
   状態であること)。
 

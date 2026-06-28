@@ -19,6 +19,6 @@
     "lint": "deno lint && deno fmt --check",
     "fix": "deno lint --fix && deno fmt",
     "build": "deno task build:*",
-    "build:camera-view": "cd firmware/camera-view && mcconfig -d -m -p esp32/m5stack_cores3"
+    "build:camera-view": "cd firmware/camera-view && mcconfig -d -m -p esp32/m5stack_cores3 -o build"
   }
 }
