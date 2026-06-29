@@ -11,8 +11,8 @@ M5Stack CoreS3 のオンボードカメラ (GC0308) の映像を、本体の ili
 CoreS3 を USB 接続して、リポジトリルートで、
 
 ```sh
-deno task build:camera-view
-# = cd firmware/camera-view && mcconfig -d -m -p esp32/m5stack_cores3
+deno task build:poc:camera-view
+# = cd firmware-poc/camera-view && mcconfig -d -m -p esp32/m5stack_cores3
 ```
 
 `mcconfig` がビルドと USB 書き込みまで行う。カメラドライバと GC0308 のピン定義は Moddable SDK 本体と `esp32/m5stack_cores3` ターゲットに含まれ、追加の C コードは不要。

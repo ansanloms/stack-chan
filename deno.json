@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json",
-  "exclude": ["firmware"],
+  "exclude": ["firmware", "firmware-poc"],
   "fmt": {
     "proseWrap": "preserve"
   },
@@ -18,12 +18,14 @@
   "tasks": {
     "test": "deno test -A --parallel --coverage",
     "check": "deno task check:*",
-    "check:camera-view": "deno check --config firmware/camera-view/deno.json firmware/camera-view/main.ts",
-    "check:face": "deno check --config firmware/face/deno.json firmware/face/main.ts",
+    "check:product": "deno check --config firmware/deno.json firmware/main.ts",
+    "check:poc:camera-view": "deno check --config firmware-poc/camera-view/deno.json firmware-poc/camera-view/main.ts",
+    "check:poc:face": "deno check --config firmware-poc/face/deno.json firmware-poc/face/main.ts",
     "lint": "deno lint && deno fmt --check",
     "fix": "deno lint --fix && deno fmt",
     "build": "deno task build:*",
-    "build:camera-view": "cd firmware/camera-view && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build",
-    "build:face": "cd firmware/face && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build"
+    "build:product": "cd firmware && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build",
+    "build:poc:camera-view": "cd firmware-poc/camera-view && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build",
+    "build:poc:face": "cd firmware-poc/face && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build"
   }
 }

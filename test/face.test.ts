@@ -1,14 +1,17 @@
 /*
  * Unit tests for the firmware face-layout logic.
  *
- * Like frame.test.ts, these live outside firmware/ because firmware/face is
+ * Like frame.test.ts, these live outside the firmware trees because the app is
  * scoped to the XS environment (its own deno.json: no Deno globals, no @std).
  * `face.ts` is SDK-free, so the host/Deno test imports it directly and checks
  * the pure geometry/animation math for given screen sizes and elapsed times.
+ *
+ * This targets the product copy at firmware/face.ts (the face logic that ships).
+ * firmware-poc/face is the original bring-up demo and currently identical.
  */
 
 import { assert, assertEquals } from "jsr:@std/assert@^1";
-import { computeFace, type Rect } from "../firmware/face/face.ts";
+import { computeFace, type Rect } from "../firmware/face.ts";
 
 const W = 320;
 const H = 240;

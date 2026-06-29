@@ -1,10 +1,11 @@
 /*
  * Unit tests for the firmware frame-handling logic.
  *
- * These live outside firmware/ because firmware/camera-view is scoped to the XS
- * environment (its own deno.json: no Deno globals, no @std). Deno tests run in
- * the host/Deno environment and import the SDK-free `frame.ts` directly,
- * injecting fakes for the camera, renderer and bitmap factory.
+ * These live outside the firmware trees because firmware-poc/camera-view is
+ * scoped to the XS environment (its own deno.json: no Deno globals, no @std).
+ * Deno tests run in the host/Deno environment and import the SDK-free
+ * `frame.ts` directly, injecting fakes for the camera, renderer and bitmap
+ * factory.
  */
 
 import { assert, assertEquals } from "jsr:@std/assert@^1";
@@ -13,7 +14,7 @@ import {
   type FrameSource,
   type Renderer,
   renderFrame,
-} from "../firmware/camera-view/frame.ts";
+} from "../firmware-poc/camera-view/frame.ts";
 
 Deno.test("renderFrame draws full-screen then closes the frame, in order", () => {
   const calls: string[] = [];

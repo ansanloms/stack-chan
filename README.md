@@ -10,9 +10,11 @@ M5Stack CoreS3 で動かすｽﾀｯｸﾁｬﾝのファームウェア。C で
 
 device(XS) と host(Deno) はグローバル環境も解決規則も別物なので、ツール設定 (型検査・lint・テスト) を明確に分けている。
 
-### device (`firmware/`)
+### device (`firmware/` / `firmware-poc/`)
 
 M5Stack CoreS3 上の XS エンジンで動く。Moddable SDK のモジュール (`commodetto/*`, `piu/*`, `embedded:io/*` 等) を使い、`mcconfig` でビルドして実機に焼く。Deno / Node では動かない。SDK の仮想モジュールは型のみの `.d.ts` として提供され、実体は XS / native 実装。
+
+`mcconfig` は manifest 1 つにつきファーム 1 つを生成し、実機のフラッシュにはアプリが 1 つしか載らない。そのため「焼ける単位」ごとにディレクトリを分ける。製品 (実機スタックチャン本体) は `firmware/` に 1 つ、単機能の動作確認 (bring-up) 用アプリは `firmware-poc/<app>/` に複数置く。
 
 ### host
 
@@ -21,18 +23,26 @@ M5Stack CoreS3 上の XS エンジンで動く。Moddable SDK のモジュール
 ## リポジトリ構成
 
 ```
-firmware/<app>/   Moddable / XS アプリ (device に焼く)。各 app が自分の deno.json を持つ
-test/             firmware の純ロジックに対する Deno テスト
-deno.json         ルート。host 環境の設定 + タスク (firmware は exclude)
+firmware/             製品 (実機スタックチャン本体)。flat に 1 アプリ。自分の deno.json を持つ
+firmware-poc/<app>/   bring-up / 動作確認用アプリ。1 機能 = 1 ディレクトリ。各 app が deno.json を持つ
+test/                 firmware / firmware-poc の純ロジックに対する Deno テスト
+deno.json             ルート。host 環境の設定 + タスク (firmware・firmware-poc は exclude)
 ```
 
-現在の app:
+`firmware/` は出荷する 1 つのファーム、`firmware-poc/` は使い捨て前提の実験場という住み分け。poc で単機能を実機検証し、固まったロジックを `firmware/` へ統合していく。
 
-- `firmware/camera-view/` — カメラ映像を画面表示する最小アプリ。詳細は
-  [firmware/camera-view/README.md](firmware/camera-view/README.md)。
-- `firmware/face/` — スタックチャンの顔 (黒背景に白い目と口) を表示するアプリ。
-  まばたき・口の開閉・呼吸のアニメーション付き。カメラに依存しないので実機だけでなく
-  シミュレータ (`mcconfig -p sim/m5stack`) でもそのまま動く。
+製品 (`firmware/`):
+
+- スタックチャンの顔 (黒背景に白い目と口) を表示する。まばたき・口の開閉・呼吸の
+  アニメーション付き。`firmware-poc/face` を種にして作られており、今後ここへカメラや
+  サーボ等を統合していく。
+
+PoC (`firmware-poc/`):
+
+- `firmware-poc/camera-view/` — カメラ映像を画面表示する最小アプリ。詳細は
+  [firmware-poc/camera-view/README.md](firmware-poc/camera-view/README.md)。
+- `firmware-poc/face/` — 顔表示の bring-up デモ。製品 `firmware/` の元になった。
+  カメラに依存しないので実機だけでなくシミュレータ (`mcconfig -p sim/m5stack`) でも動く。
 
 ## 前提
 
@@ -43,15 +53,16 @@ deno.json         ルート。host 環境の設定 + タスク (firmware は exc
 
 ## タスク
 
-ルートの `deno.json` に定義。app ごとのタスクは `<verb>:<app>`、`deno task build` / `deno task check` は `:*` で全 app に展開する。
+ルートの `deno.json` に定義。製品は `<verb>:product`、poc は `<verb>:poc:<app>`。`deno task build` / `deno task check` は `:*` で全 app (製品 + poc) に展開する。
 
 ```sh
-deno install                  # 型定義 (@moddable/typings) をルート node_modules へ
-deno task build               # 全 firmware app をビルド・書き込み (mcconfig)
-deno task build:camera-view   # 個別
-deno task check               # 全 firmware app の型検査
-deno task check:camera-view   # 個別
-deno test                     # firmware 純ロジックのテスト
+deno install                    # 型定義 (@moddable/typings) をルート node_modules へ
+deno task build                 # 全 app をビルド・書き込み (mcconfig)
+deno task build:product         # 製品 (firmware/) を個別ビルド・書き込み
+deno task build:poc:camera-view # poc を個別ビルド・書き込み
+deno task check                 # 全 app の型検査
+deno task check:product         # 製品を個別型検査
+deno test                       # 純ロジックのテスト
 deno task lint                # deno lint + fmt --check
 deno task fix                 # deno lint --fix + fmt
 ```
@@ -97,7 +108,7 @@ ls /dev/ttyACM*                             # 例: /dev/ttyACM0 (環境により
 アタッチしたポートを `UPLOAD_PORT` で渡してビルド・書き込み。
 
 ```sh
-UPLOAD_PORT=/dev/ttyACM0 deno task build:camera-view
+UPLOAD_PORT=/dev/ttyACM0 deno task build:product
 ```
 
 `mcconfig` がビルドと書き込みを一括で行う (`UPLOAD_PORT` 未指定時は esptool が自動検出)。
@@ -105,7 +116,7 @@ UPLOAD_PORT=/dev/ttyACM0 deno task build:camera-view
 ### 環境メモ
 
 - `mcconfig` は既定でビルド成果物を `$MODDABLE/build` 配下へ書く。SDK が読み取り専用
-  (nix store 等) だと `### Error: Permission denied` になるため、`build:camera-view`
+  (nix store 等) だと `### Error: Permission denied` になるため、`build:*`
   タスクは `-o build` で書き込み可能な出力先を明示している。
 - esp32-s3 ビルドには ESP-IDF v6.0 が必要 (上記セットアップ)。`IDF_PATH` 設定 +
   `. $IDF_PATH/export.sh` を済ませること。未設定だと `### Error: $IDF_PATH not set`、
@@ -123,7 +134,7 @@ UPLOAD_PORT=/dev/ttyACM0 deno task build:camera-view
 アプリをシミュレータでビルド・起動する。`-p` にシミュレータターゲットを渡す。
 
 ```sh
-cd firmware/<app>
+cd firmware-poc/<app>   # 製品なら cd firmware
 mcconfig -d -m -p sim/m5stack -o build
 ```
 
@@ -143,7 +154,7 @@ GDK_BACKEND=x11 mcsim .../release/<app>/mc.so
 
 ### camera-view はシミュレータでは動かない
 
-シミュレータは XS エンジンと Piu / Commodetto の描画を PC 上で再現するが、ハードウェア固有ドライバは持たない。camera-view が使う `embedded:io/image/in/camera` (GC0308) は esp32 専用実装で、シミュレータには無い。そのため camera-view の検証は実機で行う必要がある。シミュレータと xsbug は、カメラに依存しない描画 / UI / ロジックのアプリ (例: `firmware/face`) や、将来の app を実機なしで試すために用意してある。
+シミュレータは XS エンジンと Piu / Commodetto の描画を PC 上で再現するが、ハードウェア固有ドライバは持たない。camera-view が使う `embedded:io/image/in/camera` (GC0308) は esp32 専用実装で、シミュレータには無い。そのため camera-view の検証は実機で行う必要がある。シミュレータと xsbug は、カメラに依存しない描画 / UI / ロジックのアプリ (例: `firmware-poc/face` や製品 `firmware/`) や、将来の app を実機なしで試すために用意してある。
 
 ## TypeScript / 型
 
@@ -155,7 +166,7 @@ device コードも TypeScript で書く。`mcconfig` は SDK 同梱の typings 
 
 - `compilerOptions.lib` を `["es2024"]` にして DOM / Deno グローバルを排除し XS 環境に寄せる。`types` で XS のアンビエント宣言 (`@moddable/typings/xs.d.ts`) を読む。
 - Moddable の仮想モジュールは型のみの `.d.ts`。Deno に tsconfig の `paths` は無いが、 `"unstable": ["sloppy-imports"]` + `imports` の末尾スラッシュ付きプレフィックスマップ(例 `"commodetto/"`) で bare specifier を `.d.ts` へ解決する(推移依存も同様)。新しいSDK 名前空間を使い始めたらプレフィックスを 1 行足す。型の無いモジュールだけ exact マップでローカル `.d.ts` shim に向ける。
-- ルート `deno.json` は `firmware` を `exclude` し、XS 用の設定が host コードへ漏れないようにする。エディタは各 app の `deno.json` により denols で型解決される。
+- ルート `deno.json` は `firmware` と `firmware-poc` を `exclude` し、XS 用の設定が host コードへ漏れないようにする。エディタは各 app の `deno.json` により denols で型解決される。
 
 ## テスト
 
