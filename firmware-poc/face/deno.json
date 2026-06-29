@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json",
+  // Type-check config for this Moddable / XS app under `deno check`.
+  //
+  // The Moddable SDK virtual modules ("commodetto/*", "timer") ship as type-only
+  // .d.ts in @moddable/typings, which the package expects to be consumed via
+  // tsconfig `paths` wildcards. Deno has no `paths`, but with sloppy-imports a
+  // trailing-slash prefix map resolves the bare specifiers to their .d.ts (and
+  // transitive deps). Add one prefix line per SDK namespace as you import it.
+  //
+  // compilerOptions is scoped to this file so the XS globals/lib do not leak
+  // into the Deno host code at the repo root.
+  "unstable": ["sloppy-imports"],
+  "compilerOptions": {
+    "lib": ["es2024"],
+    // Global ambient XS declarations (trace, ByteBuffer, ...). `screen` comes
+    // from the global {} block in commodetto/Poco.d.ts, pulled in via the map.
+    "types": ["../../node_modules/@moddable/typings/xs.d.ts"]
+  },
+  "imports": {
+    "commodetto/": "../../node_modules/@moddable/typings/commodetto/",
+    // timer has an exact-match .d.ts (no namespace prefix).
+    "timer": "../../node_modules/@moddable/typings/timer.d.ts"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/denoland/deno/refs/heads/main/cli/schemas/config-file.v1.json",
+  "exclude": ["firmware", "firmware-poc"],
+  "fmt": {
+    "proseWrap": "preserve"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": ["no-sloppy-imports"]
+    },
+    "plugins": ["jsr:@aireone/deno-lint-curly"]
+  },
+  "nodeModulesDir": "auto",
+  "imports": {
+    "@moddable/typings": "npm:@moddable/typings@^8.2.3"
+  },
+  "tasks": {
+    "test": "deno test -A --parallel --coverage",
+    "check": "deno task check:*",
+    "check:product": "deno check --config firmware/deno.json firmware/main.ts",
+    "check:poc:camera-view": "deno check --config firmware-poc/camera-view/deno.json firmware-poc/camera-view/main.ts",
+    "check:poc:face": "deno check --config firmware-poc/face/deno.json firmware-poc/face/main.ts",
+    "lint": "deno lint && deno fmt --check",
+    "fix": "deno lint --fix && deno fmt",
+    "build": "deno task build:*",
+    "build:product": "cd firmware && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build",
+    "build:poc:camera-view": "cd firmware-poc/camera-view && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build",
+    "build:poc:face": "cd firmware-poc/face && mkdir -p build && mcconfig -d -m -p esp32/m5stack_cores3 -o build"
+  }
+}
